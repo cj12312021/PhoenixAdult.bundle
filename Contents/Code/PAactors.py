@@ -24,6 +24,7 @@ class PhoenixActors:
 
     def processActors(self, metadata):
         actorsProcessed = 0
+        actorSet = set([])
         while actorsProcessed < self.actorsNum:
             skip = False
             # Save the potentional new Actor or Actress to a new variable, replace &nbsp; with a true space, and strip off any surrounding whitespace

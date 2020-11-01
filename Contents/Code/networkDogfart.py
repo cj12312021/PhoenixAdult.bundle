@@ -46,49 +46,53 @@ def update(metadata, siteID, movieGenres, movieActors):
     detailsPageElements = HTML.ElementFromURL(url)
 
     # Studio
+    Log('*******Updating Studio******: ')
     metadata.studio = 'Dogfart'
-    metadata_id = str(metadata.id).split('|')
-    sceneURL = PAutils.Decode(metadata_id[0])
-    if not sceneURL.startswith('http'):
-        sceneURL = PAsearchSites.getSearchBaseURL(siteID) + sceneURL
-    sceneDate = metadata_id[2]
-    req = PAutils.HTTPRequest(sceneURL)
-    detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title
-    metadata.title = detailsPageElements.xpath('//div[@class="icon-container"]/a/@title')[0]
+    Log('*******Updating Title******: ')
+    metadata.title = detailsPageElements.xpath('//div[@class="icon-container"]/a')[0].get("title")
+    Log('*******Title is ******: '+metadata.title)
 
     # Summary
+    Log('*******Updating Summary******: ')
     metadata.summary = detailsPageElements.xpath('//div[contains(@class, "description")]')[0].text_content().strip().replace('...read more', '').replace('\n', ' ')
 
     # Collections / Tagline
-    tagline = detailsPageElements.xpath('//h3 [@class="site-name"]')[0].text_content().strip()
+    Log('*******Updating Tagline/Collections******: ')
+    tagline = detailsPageElements.xpath('//h3[@class="site-name"]')[0].text.strip()
+    Log('*******tagline is ******: '+tagline)
     metadata.tagline = re.sub(r"(\w)([A-Z])", r"\1 \2", tagline.replace('.com', ''))
+    Log('*******Updated tagline is ******: ' + str(metadata.tagline))
     metadata.collections.clear()
     metadata.collections.add(metadata.studio)
     metadata.collections.add(metadata.tagline)
 
     # Release Date
-    # try:
-    #     date = detailsPageElements.xpath('//meta[@itemprop="uploadDate"]')[0].get('content').replace('T00:00:00+07:00',
-    #                                                                                                  '')
-    #     if len(date) > 0:
-    #         date_object = datetime.strptime(date, '%Y-%m-%d')
-    #         metadata.originally_available_at = date_object
-    #         metadata.year = metadata.originally_available_at.year
-    #         Log("Date from file")
-    # except:
-    #     pass
-    if sceneDate:
-        date_object = parse(sceneDate)
-        metadata.originally_available_at = date_object
-        metadata.year = metadata.originally_available_at.year
+    Log('*******Updating Release Date******: ')
+    try:
+        date = detailsPageElements.xpath('//meta[@itemprop="uploadDate"]')[0].get('content').replace('T00:00:00+07:00',
+                                                                                                     '')
+        if len(date) > 0:
+            date_object = datetime.strptime(date, '%Y-%m-%d')
+            metadata.originally_available_at = date_object
+            metadata.year = metadata.originally_available_at.year
+            Log("Date from file")
+            Log('*******Updating Release Date is ******: '+str(metadata.originally_available_at))
+    except:
+        pass
+    # if sceneDate:
+    #     date_object = parse(sceneDate)
+    #     metadata.originally_available_at = date_object
+    #     metadata.year = metadata.originally_available_at.year
 
     # Actors
+    Log('*******Updating Actors******: ')
     actorSet = set([])
     actor2photo = {}
     title = detailsPageElements.xpath('//h1[@class="description-title"]')[0].text
     metadata.title = title + ' in ' + metadata.tagline
+    Log('*******New Title Actors******: '+metadata.title)
     title = title.replace('\'', '%27')
     studio = metadata.tagline.replace('-', ' ')
     search = studio.replace(' ', '+') + '%3a+' + title.replace('&', 'and').replace(' ', '+') + '/year=' + str(

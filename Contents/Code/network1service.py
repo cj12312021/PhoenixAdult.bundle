@@ -157,7 +157,6 @@ def update(metadata, siteID, movieGenres, movieActors):
         metadata.collections.add(realStudio)
         metadata.tagline = studio
         metadata.collections.add(studio)
-    metadata.studio = detailsPageElements['brand'].title()
 
     # Tagline and Collection(s)
     metadata.collections.clear()
