@@ -462,19 +462,19 @@ searchSites[324] = ("CumDisgrace", "CumDisgrace", "https://www.pornpros.com", "h
 searchSites[325] = ("CockCompetition", "CockCompetition", "https://www.pornpros.com", "https://pornpros.com/video/")
 searchSites[326] = ("PimpParade", "PimpParade", "https://www.pornpros.com", "https://pornpros.com/video/")
 searchSites[327] = ("SquirtDisgrace", "SquirtDisgrace", "https://www.pornpros.com", "https://pornpros.com/video/")
-searchSites[328] = ("DigitalPlayground", "DigitalPlayground", "https://www.digitalplayground.com", "https://site-api.project1service.com")
+searchSites[328] = ("Digital Playground", "Digital Playground", "https://www.digitalplayground.com", "https://site-api.project1service.com")
 searchSites[329] = ("Throated", "Throated", "https://www.blowpass.com", "https://www.blowpass.com/en/search/throated/scene/")
 searchSites[330] = ("Nuru Massage", "Nuru Massage", "https://www.fantasymassage.com", "https://www.fantasymassage.com/en/search/")
 searchSites[331] = ("Nuru Massage", "Nuru Massage", "https://www.fantasymassage.com", "https://www.fantasymassage.com/en/search/")
 searchSites[332] = ("DDF Babes", "DDF Babes", "https://ddfnetwork.com", "https://ddfnetwork.com/videos/freeword/")
-searchSites[333] = ("SexyHub", "SexyHub", "https://www.sexyhub.com", "https://site-api.project1service.com")
+searchSites[333] = ("SexyHub", "Sexy Hub", "https://www.sexyhub.com", "https://site-api.project1service.com")
 searchSites[334] = ("Dane Jones", "Dane Jones", "https://www.sexyhub.com", "https://site-api.project1service.com")
 searchSites[335] = ("Fitness Rooms", "Fitness Rooms", "https://www.sexyhub.com", "https://site-api.project1service.com")
 searchSites[336] = ("Girlfriends.xxx", "Girlfriends.xxx", "https://www.sexyhub.com", "https://site-api.project1service.com")
 searchSites[337] = ("Lesbea", "Lesbea", "https://www.sexyhub.com", "https://site-api.project1service.com")
 searchSites[338] = ("Massage Rooms", "Massage Rooms", "https://www.sexyhub.com", "https://site-api.project1service.com")
 searchSites[339] = ("MomXXX", "MomXXX", "https://www.sexyhub.com", "https://site-api.project1service.com")
-searchSites[340] = ("FakeHub", "FakeHub", "https://www.fakehub.com", "https://site-api.project1service.com")
+searchSites[340] = ("FakeHub", "Fake Hub", "https://www.fakehub.com", "https://site-api.project1service.com")
 searchSites[341] = ("Big Cock Bully", "Big Cock Bully", "https://tour.naughtyamerica.com", "https://i6p9q9r18e-3.algolianet.com/1/indexes/*/queries")
 searchSites[342] = ("VirtualRealPorn", "VirtualRealPorn", "https://virtualrealporn.com", "https://virtualrealporn.com/vr-porn-video/")
 searchSites[343] = ("Analized", "Analized", "https://analized.com", "https://analized.com/1/search/")
@@ -1316,7 +1316,7 @@ def getSearchSettings(mediaTitle):
         ('^ddfb ', 'DDFBusty '),
         ('^dm ', 'DirtyMasseur '),
         ('^dnj ', 'DaneJones '),
-        ('^dpg ', 'DigitalPlayground '),
+        ('^dpg ', 'Digital Playground '),
         ('^dsw ', 'DaughterSwap '),
         ('^dwc ', 'DirtyWivesClub '),
         ('^dwp ', 'DayWithAPornstar '),

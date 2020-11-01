@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0,'D:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
+import MyHelper
 class PhoenixGenres:
     genresTable = None
     genresNum = 0
@@ -498,5 +501,6 @@ class PhoenixGenres:
                     skip = True
 
             if not skip:
-                metadata.genres.add(newGenre.title())
+                Log('*******Try adding genre****** ' + str(newGenre.title()))
+                metadata.genres.add(MyHelper.getTag(newGenre.title()))
             genresProcessed = genresProcessed + 1

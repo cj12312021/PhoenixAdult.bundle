@@ -1646,4 +1646,4 @@ class PhoenixAdultAgent(Agent.Movies):
         movieActors.processActors(metadata)
 
         # Add Content Rating
-        metadata.content_rating = 'XXX'
+        metadata.content_rating = 'NC-17'

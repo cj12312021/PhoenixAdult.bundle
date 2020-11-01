@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0,'D:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
+import MyHelper
 import PAutils
 
 
@@ -2467,9 +2470,25 @@ class PhoenixActors:
                 Log('Actor: %s %s' % (newActor, newPhoto))
 
                 role = metadata.roles.new()
-                role.name = newActor
-                role.photo = newPhoto
+                s = newActor.split(" - ")
+                role.name = MyHelper.getActor(s[0])
+                try:
+                    role.role = s[1]
+                except:
+                    pass
+                Log('******Photo Search******* role: ' + role.name + ' Year: ' + str(
+                    metadata.year) + ' replace: ' + newPhoto)
+                role.photo = MyHelper.getPhoto(role.name, metadata.year, newPhoto)
+                Log('******Actor*******: ' + role.name)
+                Log('******Actor Photo*******: ' + role.photo)
+                actorSet.add(role.name)
             actorsProcessed = actorsProcessed + 1
+
+        if len(actorSet) != 0:
+            Log('*******Searching Genre******' + str(metadata.year) + ' ' + str(actorSet))
+            genreSet = MyHelper.findGenre(None, metadata.year, list(actorSet), False)
+            for genre in genreSet:
+                metadata.genres.add(genre)
 
 
 def actorDBfinder(actorName):

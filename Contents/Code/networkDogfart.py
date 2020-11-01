@@ -1,9 +1,17 @@
 import PAsearchSites
+import re
+import MyHelper
+from datetime import datetime
 import PAgenres
 import PAactors
 import PAutils
 
 
+missingNames = {'Stella Cox in Black Meat White Feet':['Flash Brown'],
+                'Brittney White in We Fuck Black Girls': ['Kurt Lockwood','Chris Strokes'],
+                'Karlee Grey in Cuckold Sessions': ['Rico Strong', 'Jc Power'],
+                'Goddess Kyra in We Fuck Black Girls': ['Xander Corvus'],
+                'Nikki Ford in We Fuck Black Girls': ['Mr Pete','Erik Everhard']}
 def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
     encodedTitle = searchTitle.replace(' a ', ' ')
 
@@ -30,6 +38,15 @@ def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
 
 
 def update(metadata, siteID, movieGenres, movieActors):
+    Log('******UPDATE CALLED*******')
+    temp = str(metadata.id).split("|")[0].replace('_', '/').replace("$", "_")
+    Log(temp)
+    url = PAsearchSites.getSearchBaseURL(siteID) + temp
+    Log(url)
+    detailsPageElements = HTML.ElementFromURL(url)
+
+    # Studio
+    metadata.studio = 'Dogfart'
     metadata_id = str(metadata.id).split('|')
     sceneURL = PAutils.Decode(metadata_id[0])
     if not sceneURL.startswith('http'):
@@ -44,35 +61,99 @@ def update(metadata, siteID, movieGenres, movieActors):
     # Summary
     metadata.summary = detailsPageElements.xpath('//div[contains(@class, "description")]')[0].text_content().strip().replace('...read more', '').replace('\n', ' ')
 
-    # Studio
-    metadata.studio = 'Dogfart Network'
-
     # Collections / Tagline
+    tagline = detailsPageElements.xpath('//h3 [@class="site-name"]')[0].text_content().strip()
+    metadata.tagline = re.sub(r"(\w)([A-Z])", r"\1 \2", tagline.replace('.com', ''))
     metadata.collections.clear()
-    tagline = detailsPageElements.xpath('//h3[@class="site-name"]')[0].text_content().strip()
-    metadata.tagline = tagline
-    metadata.collections.add(PAsearchSites.getSearchSiteName(siteID))
+    metadata.collections.add(metadata.studio)
+    metadata.collections.add(metadata.tagline)
 
     # Release Date
+    # try:
+    #     date = detailsPageElements.xpath('//meta[@itemprop="uploadDate"]')[0].get('content').replace('T00:00:00+07:00',
+    #                                                                                                  '')
+    #     if len(date) > 0:
+    #         date_object = datetime.strptime(date, '%Y-%m-%d')
+    #         metadata.originally_available_at = date_object
+    #         metadata.year = metadata.originally_available_at.year
+    #         Log("Date from file")
+    # except:
+    #     pass
     if sceneDate:
         date_object = parse(sceneDate)
         metadata.originally_available_at = date_object
         metadata.year = metadata.originally_available_at.year
 
-    # Genres
-    movieGenres.clearGenres()
-    for genreLink in detailsPageElements.xpath('//div[@class="categories"]/p/a'):
-        genreName = genreLink.text_content().strip()
-
-        movieGenres.addGenre(genreName)
-
     # Actors
-    movieActors.clearActors()
-    for actorLink in detailsPageElements.xpath('//h4[@class="more-scenes"]/a'):
-        actorName = actorLink.text_content().strip()
-        actorPhotoURL = ''
+    actorSet = set([])
+    actor2photo = {}
+    title = detailsPageElements.xpath('//h1[@class="description-title"]')[0].text
+    metadata.title = title + ' in ' + metadata.tagline
+    title = title.replace('\'', '%27')
+    studio = metadata.tagline.replace('-', ' ')
+    search = studio.replace(' ', '+') + '%3a+' + title.replace('&', 'and').replace(' ', '+') + '/year=' + str(
+        metadata.year)
+    search = search.lower()
+    Log('*******Search For Actors: ' + str(search) + ' : ' + str(metadata.year))
+    try:
+        actor2photo = MyHelper.findActors(search, metadata.year, metadata, Log)
+    except:
+        pass
+    Log('*******Found Actors******: ' + str(actor2photo))
+    metadata.roles.clear()
+    if len(actor2photo) == 0:
+        actors = detailsPageElements.xpath('//h4[@class="more-scenes"]/a')
+        if len(actors) > 0:
+            for actorLink in actors:
+                actorName = str(actorLink.text_content().strip())
+                actorPhotoURL = ''
+                movieActors.addActor(actorName, actorPhotoURL)
+    else:
+        for name, photo in actor2photo.items():
+            role = metadata.roles.new()
+            s = name.split(" - ")
+            Log('*******actor******: ' + str(s))
+            role.name = s[0]
+            try:
+                role.role = s[1]
+            except:
+                pass
+            actorSet.add(role.name)
+            role.photo = photo
 
-        movieActors.addActor(actorName, actorPhotoURL)
+    # add missing actor names
+    Log('*******Missing Names******: ' + metadata.title)
+    try:
+        for name in missingNames[metadata.title]:
+            role = metadata.roles.new()
+            role.name = MyHelper.getActor(name)
+            actorSet.add(name)
+            role.photo = MyHelper.getPhoto(role.name, metadata.year, ' ')
+            Log('Member Photo Url : ' + role.photo)
+    except:
+        pass
+
+    # Genres
+    genres = detailsPageElements.xpath('//div[@class="categories"]/p/a')
+    if len(genres) > 0:
+        for genreLink in genres:
+            genreName = genreLink.text_content().strip('\n').lower()
+            movieGenres.addGenre(genreName)
+
+        Log('*******Searching Genre******')
+        genreSet = MyHelper.findGenre(None, metadata.year, list(actorSet), True)
+        Log('*******Found Genre******: ' + str(genreSet))
+        for genre in genreSet:
+            metadata.genres.add(genre)
+        Log('Genre Sequence Updated ')
+
+    # Rating
+    try:
+        rating = detailsPageElements.xpath('//span[@itemprop="ratingValue"]')[0].text
+        Log('*******rating****** ' + rating)
+        metadata.rating = float(rating)
+    except Exception as e:
+        Log(e)
 
     # Posters
     art = []
@@ -100,10 +181,10 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1:
+                if width > height:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > height and idx > 1:
+                else:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:
