@@ -35,7 +35,10 @@ def update(metadata, siteID, movieGenres, movieActors):
     metadata.title = detailsPageElements.xpath('//h1')[0].text_content().strip()
 
     # Summary
-    metadata.summary = detailsPageElements.xpath('//div[@id="synopsis-full"]//p')[0].text_content().strip()
+    try:
+        metadata.summary = detailsPageElements.xpath('//div[@id="synopsis-full"]//p')[0].text_content().strip()
+    except:
+        pass
 
     # Studio
     metadata.studio = PAsearchSites.getSearchSiteName(siteID)

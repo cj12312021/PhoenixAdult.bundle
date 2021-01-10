@@ -1842,7 +1842,7 @@ def frombuffer(mode, size, data, decoder_name="raw", *args):
             if warnings:
                 warnings.warn(
                     "the frombuffer defaults may change in a future release; "
-                    "for portability, change the call to read:\n"
+                    "for portability, change the call to reaA:\n"
                     "  frombuffer(mode, size, data, 'raw', mode, 0, 1)",
                     RuntimeWarning, stacklevel=2
                 )

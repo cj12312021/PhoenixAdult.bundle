@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'D:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
+sys.path.insert(0,'A:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
 import re
 import MyHelper
 import PAsearchSites
@@ -149,23 +149,27 @@ def update(metadata, siteID, movieGenres, movieActors):
     except:
         pass
 
+    metadata.collections.clear()
     if realStudio is None:
         metadata.studio = MyHelper.getStudio(studio)
-        metadata.collections.add(metadata.studio)
     else:
         metadata.studio = realStudio
-        metadata.collections.add(realStudio)
         metadata.tagline = studio
-        metadata.collections.add(studio)
 
     # Tagline and Collection(s)
-    metadata.collections.clear()
     seriesNames = []
     preTitle = ''
 
     if 'collections' in detailsPageElements and detailsPageElements['collections']:
         for collection in detailsPageElements['collections']:
-            seriesNames.append(collection['name'])
+            tagline = collection['name']
+            Log('******before tagline******* ' + tagline)
+            tagline = re.sub("(?<!\s)([A-Z])", r' \1', tagline).strip()
+            tagline = MyHelper.getStudio(tagline)
+            Log('******after tagline******* ' + tagline)
+            seriesNames.append(tagline)
+            if 'Mile High' in studio:
+                metadata.tagline = tagline
     if 'parent' in detailsPageElements:
         if 'title' in detailsPageElements['parent']:
             seriesNames.append(detailsPageElements['parent']['title'])
@@ -180,17 +184,24 @@ def update(metadata, siteID, movieGenres, movieActors):
     if not isInCollection:
         seriesNames.insert(0, PAsearchSites.getSearchSiteName(siteID))
 
-    for seriesName in seriesNames:
-        seriesName = MyHelper.getStudio(seriesName)
-        if 'Flixxx' in seriesName:
-            preTitle = seriesName + ': ';
-        if 'Rawcut' in seriesName:
-            seriesName = 'Raw Cuts'
-            preTitle = seriesName + ': ';
-        if 'Digital Playground' not in studio:
-            metadata.tagline = seriesName.replace('BellesaHouse', 'Bellesa Films')
-        metadata.collections.add(seriesName)
-
+    metadata.collections.clear()
+    try:
+        for seriesName in seriesNames:
+            Log('******seriesName******* ' + seriesName)
+            seriesName = MyHelper.getStudio(seriesName)
+            if 'Flixxx' in seriesName:
+                preTitle = seriesName + ': ';
+            if 'Rawcut' in seriesName:
+                seriesName = 'Raw Cuts'
+                preTitle = seriesName + ': ';
+            if 'Digital Playground' not in studio and 'Mile High' not in studio:
+                metadata.tagline = seriesName.replace('BellesaHouse', 'Bellesa Films')
+            if metadata.tagline not in seriesName and metadata.studio not in seriesName:
+                metadata.collections.add(seriesName)
+    except:
+        pass
+    metadata.collections.add(metadata.tagline)
+    metadata.collections.add(metadata.studio)
     #
     # try:
     #     #metadata.extras.clear()
@@ -217,11 +228,15 @@ def update(metadata, siteID, movieGenres, movieActors):
 
     # Summary
     description = None
-    if 'description' in detailsPageElements:
-        description = detailsPageElements['description']
-    elif 'parent' in detailsPageElements:
-        if 'description' in detailsPageElements['parent']:
-            description = detailsPageElements['parent']['description']
+    try:
+        Log('*******detailsPageElements****** ' + str(detailsPageElements))
+        if 'description' in detailsPageElements:
+            description = detailsPageElements['description']
+        elif 'parent' in detailsPageElements:
+            if 'description' in detailsPageElements['parent']:
+                description = detailsPageElements['parent']['description']
+    except:
+        pass
 
     if description:
         metadata.summary = description
@@ -300,6 +315,7 @@ def update(metadata, siteID, movieGenres, movieActors):
                 art.append(image['xx']['url'])
 
     Log('Artwork found: %d' % len(art))
+    Log('Artwork found url: ' + str(art))
     for idx, posterUrl in enumerate(art, 1):
         if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
             # Download image file for analysis

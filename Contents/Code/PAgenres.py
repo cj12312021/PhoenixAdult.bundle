@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'D:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
+sys.path.insert(0,'A:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
 import MyHelper
 class PhoenixGenres:
     genresTable = None
@@ -25,8 +25,6 @@ class PhoenixGenres:
             # Skips
             # Match and Skip
             if 'photos' == newGenre.lower():
-                skip = True
-            elif '4k' == newGenre.lower():
                 skip = True
             elif '18+teens' == newGenre.lower():
                 skip = True
@@ -118,9 +116,7 @@ class PhoenixGenres:
                 skip = True
 
             # Search and Skip
-            if '5k' in newGenre.lower():
-                skip = True
-            elif '60fps' in newGenre.lower():
+            if '60fps' in newGenre.lower():
                 skip = True
             elif 'hd' in newGenre.lower():
                 skip = True

@@ -79,6 +79,16 @@ def update(metadata, siteID, movieGenres, movieActors):
 
     # Genres
     movieGenres.clearGenres()
+    resolution = ''
+    degree = ''
+    for tag in detailsPageElements.xpath('//span[@class="detail__specs-item"]'):
+        text = tag.text
+        if 'K' in text:
+            resolution = text
+        if '°' in text:
+            degree = text
+    movieGenres.addGenre(resolution)
+    movieGenres.addGenre(degree)
     genres = detailsPageElements.xpath('//div[contains(@class, "tag-list")]//a')
     for genre in genres:
         movieGenres.addGenre(genre.text_content().strip())
@@ -99,7 +109,11 @@ def update(metadata, siteID, movieGenres, movieActors):
 
     # Posters and artwork
     try:
-        art.insert(0, detailsPageElements.xpath('//meta[@property="og:image"]/@content')[0].replace('cover', 'hero').replace('medium.jpg', 'large.jpg'))
+        url = detailsPageElements.xpath('//meta[@property="og:image"]/@content')[0].replace('cover', 'hero').replace('medium.jpg', 'large.jpg')
+        backroungUrl = url.replace('https://cdns-i.wankzvr.com/', 'https://images.povr.com/wvr/').replace('/hero/large.jpg', '/cover/large.jpg')
+        Log('Posters and artwork: ' + url)
+        art.insert(0, backroungUrl)
+        art.insert(1, url)
     except:
         pass
 
@@ -113,10 +127,10 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1 and height >= width:
+                if height > width:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > 100 and width > height:
+                else:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:

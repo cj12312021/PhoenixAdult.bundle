@@ -10,7 +10,7 @@ def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
     searchResults = [directURL]
     googleResults = PAutils.getFromGoogleSearch(searchTitle, siteNum)
     for sceneURL in googleResults:
-        if ('/virtualreality/' in sceneURL and sceneURL not in searchResults):
+        if ('/virtualreality/' in sceneURL and sceneURL not in searchResults and '/virtualreality/list' not in sceneURL):
             searchResults.append(sceneURL)
 
     for sceneURL in searchResults:
@@ -102,10 +102,10 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1:
+                if height > width:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > 100 and idx > 1:
+                else:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:

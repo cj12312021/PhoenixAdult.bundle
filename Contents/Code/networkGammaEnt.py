@@ -261,7 +261,7 @@ def update(metadata, siteID, movieGenres, movieActors):
         metadata.studio = 'XEmpire'
         director.name = 'Mason'
     elif siteID == 329 or (siteID >= 351 and siteID <= 354) or siteID == 861:
-        metadata.studio = 'Blowpass'
+        metadata.studio = 'MyXXXPass'
     elif siteID == 331 or (siteID >= 355 and siteID <= 360) or siteID == 750:
         metadata.studio = 'Fantasy Massage'
     elif (siteID >= 365 and siteID <= 372) or siteID == 466 or siteID == 690:
@@ -311,19 +311,20 @@ def update(metadata, siteID, movieGenres, movieActors):
         tagline = PAsearchSites.getSearchSiteName(siteID)
     metadata.tagline = tagline
     metadata.collections.add(tagline)
+    metadata.collections.add(metadata.studio)
 
     # Title DVD
     try:
         dvdTitle = detailsPageElements.xpath('//a[contains(@class,"dvdLink")][1]')[0].get('title').strip()
-        metadata.collections.add(dvdTitle.replace('#0', '').replace('#', ''))
+        # metadata.collections.add(dvdTitle.replace('#0', '').replace('#', ''))
     except:
         try:
             dvdTitleScript = detailsPageElements.xpath('//script[contains(text(),"dvdName")]')[0].text_content()
             alpha = dvdTitleScript.find('"dvdName"') + 11
             omega = dvdTitleScript.find('"', alpha)
             dvdTitle = dvdTitleScript[alpha:omega]
-            if dvdTitle:
-                metadata.collections.add(dvdTitle.replace('#0', '').replace('#', ''))
+            # if dvdTitle:
+            #     metadata.collections.add(dvdTitle.replace('#0', '').replace('#', ''))
         except:
             try:
                 dvdTitle = detailsPageElements.xpath('//h1[@class="sceneTitle"]')[0].text_content().strip()
@@ -331,7 +332,7 @@ def update(metadata, siteID, movieGenres, movieActors):
                 dvdTitle = dvdTitle.replace("BONUS", "")
                 dvdTitle = dvdTitle.replace("BTS-", "").replace("BTS - ", "")
                 dvdTitle = dvdTitle.replace("BTS", "")
-                metadata.collections.add(dvdTitle.replace('#0', '').replace('#', ''))
+                # metadata.collections.add(dvdTitle.replace('#0', '').replace('#', ''))
             except:
                 dvdTitle = "This is some damn nonsense that should never match the scene title"
 
@@ -536,12 +537,12 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1:
+                if width > height:
                     # Item is a poster
-                    metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > 100:
-                    # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
+                else:
+                    # Item is an art item
+                    metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:
                 pass
 

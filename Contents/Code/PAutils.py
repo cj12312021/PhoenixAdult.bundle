@@ -82,7 +82,9 @@ def reqBinRequest(url, method, **kwargs):
 
 
 def HTTPRequest(url, method='GET', **kwargs):
+    Log('HTTPRequest url:' + url)
     url = getClearURL(url)
+    Log('HTTPRequest url:' + url)
     method = method.upper()
     headers = kwargs.pop('headers', {})
     cookies = kwargs.pop('cookies', {})

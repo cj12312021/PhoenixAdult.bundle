@@ -6,6 +6,7 @@ import PAutils
 
 def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
     req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + encodedTitle)
+    # Log('*******url****** ' + str(req.text))
     searchResults = HTML.ElementFromString(req.text)
     for searchResult in searchResults.xpath('//div[@class="video-item"]'):
         titleNoFormatting = searchResult.xpath('.//div[@class="video-title"]//a')[0].text_content()
@@ -99,10 +100,10 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1:
+                if height > width:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > 100 and idx > 1:
+                else:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:

@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+import sys
+sys.path.insert(0,'A:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
+import MyHelper
 import PAsearchSites
 import PAgenres
+import urllib
 import PAutils
-
+import re
 
 def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
     req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + encodedTitle)
@@ -19,6 +24,25 @@ def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
 
     return results
 
+def findPoster(title):
+    original_title = re.sub('^(A|The)\s', '', title)
+    Log('findPoster original_title: ' + original_title)
+    title = title.replace(':','').replace('’','').replace('#','').replace('&','').replace('?','').replace('*','')
+    Log('findPoster title: ' + title)
+    value = {'fq': title}
+    Log('findPoster value: ' + str(value))
+    value = urllib.urlencode(value)
+    Log('findPoster encodeValue: ' + str(value))
+    url = 'https://www.adultempire.com/94792/studio/vrbangers-studios.html?media=14&' + value
+    Log('findPoster url: ' + str(url))
+    html = MyHelper.getHTML(url)
+    for image in  html.xpath('//div[@class="boxcover-container"]/a/img'):
+        original_title = original_title.lower().replace('’', '')
+        original_title = re.sub('[,#!?&’\':;\-"()]', '', original_title)
+        compare = image.get('title').lower().replace('\'', '')
+        compare = re.sub('[,#!?&’\':;\-"()]', '', compare)
+        if original_title in compare:
+            return image.get('data-src').replace('m.jpg','h.jpg')
 
 def update(metadata, siteID, movieGenres, movieActors):
     metadata_id = str(metadata.id).split('|')
@@ -44,7 +68,7 @@ def update(metadata, siteID, movieGenres, movieActors):
     metadata.collections.clear()
     tagline = PAsearchSites.getSearchSiteName(siteID)
     metadata.tagline = tagline
-    metadata.collections.add(tagline)
+    metadata.collections.add(metadata.studio)
 
     # Release Date
     date = detailsPageElements.xpath('//div[@class="video-content__download-info"]//div[@class="section__item-title-download-space"][2]')[0].text_content().replace('Release date:', '').strip()
@@ -55,10 +79,24 @@ def update(metadata, siteID, movieGenres, movieActors):
 
     # Genres
     movieGenres.clearGenres()
+    resolution = detailsPageElements.xpath('//span[@class="video-item--quality_res"]')[0].text
+    Log('Resolution: ' + resolution)
+    degree = detailsPageElements.xpath('//div[@class="section__item-title-download-space section__item-title-download-space-opened"]')[0].text_content()
+    degree = degree.replace('Degree:','').strip()+'°'
+    Log('degree: ' + degree)
+    format = detailsPageElements.xpath('//div[@class="section__item-title-download-space section__item-title-download-space-opened"]')[3].text_content()
+    format = format.replace('Format:', '').strip()
+    if 'VR' in format:
+        format = '2D'
+    Log('format: ' + format)
+    movieGenres.addGenre(resolution)
+    movieGenres.addGenre(degree)
+    movieGenres.addGenre(format)
     for genreLink in detailsPageElements.xpath('//div[contains(@class,"video-item-info-tags")]//a'):
         genreName = genreLink.text_content().strip()
 
         movieGenres.addGenre(genreName)
+    movieGenres.addGenre('VR')
 
     # Actors
     movieActors.clearActors()
@@ -75,8 +113,7 @@ def update(metadata, siteID, movieGenres, movieActors):
     # Posters
     art = []
     xpaths = [
-        '//a[contains(@class, "justified__item")]/@href',
-        '//section[@class="banner"]//img/@src'
+        '//a[contains(@class, "justified__item")]/@href'
     ]
 
     for xpath in xpaths:
@@ -84,7 +121,32 @@ def update(metadata, siteID, movieGenres, movieActors):
             art.append(img)
 
     Log('Artwork found: %d' % len(art))
-    for idx, posterUrl in enumerate(art, 1):
+    i = 1
+    posterUrl = ''
+    try:
+        Log('Finding poster.')
+        posterUrl = findPoster(str(metadata.title))
+        Log('posterUrl: ' + posterUrl)
+        metadata.posters[posterUrl] = Proxy.Media(HTTP.Request(posterUrl, headers={'Referer': 'http://www.google.com'}).content,
+                                              sort_order=i)
+    except:
+        pass
+    i = i + 1
+    try:
+        posterUrl = detailsPageElements.xpath('//dl8-video')[0].get('poster')
+        Log('Background: ' + posterUrl)
+        metadata.art[posterUrl] = Proxy.Media(HTTP.Request(posterUrl, headers={'Referer': 'http://www.google.com'}).content, sort_order=i)
+        i=i+1
+    except:
+        pass
+    try:
+        posterUrl = detailsPageElements.xpath('//img[@class="object-fit-cover img-parallax-inside"]')[0].get('data-pagespeed-lazy-src')
+        metadata.art[posterUrl] = Proxy.Media(HTTP.Request(posterUrl, headers={'Referer': 'http://www.google.com'}).content,
+                                              sort_order=i)
+        i = i + 1
+    except:
+        pass
+    for idx, posterUrl in enumerate(art, i):
         if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
             # Download image file for analysis
             try:
@@ -93,10 +155,10 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > 1 or height > width:
+                if height > width:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if width > 100 and width > height:
+                else:
                     # Item is an art item
                     metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
             except:

@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+import re
 import PAsearchSites
+import re
 import PAgenres
 import PAutils
 
@@ -52,13 +55,13 @@ def update(metadata, siteID, movieGenres, movieActors):
     detailsPageElements = HTML.ElementFromString(req.text)
 
     # Title
-    metadata.title = detailsPageElements.xpath('//h1[contains(@class, "video-title")]')[0].text_content()
+    metadata.title = detailsPageElements.xpath('//div[@class="video-rating-and-details"]/h1')[0].text_content()
 
     # Summary
     metadata.summary = detailsPageElements.xpath('//p[@class="video-description"]')[0].text_content().strip()
 
     # Studio
-    metadata.studio = 'BadoinkVR'
+    metadata.studio = 'Badoink VR'
 
     # Tagline and Collection
     metadata.collections.clear()
@@ -75,6 +78,16 @@ def update(metadata, siteID, movieGenres, movieActors):
 
     # Genres
     movieGenres.clearGenres()
+    resolution = ''
+    degree = ''
+    for tag in detailsPageElements.xpath('//img[@class="video-format-image"]'):
+        text = tag.get('alt')
+        if 'K' in text:
+            resolution = text
+        if '°' in text:
+            degree = text
+    movieGenres.addGenre(resolution)
+    movieGenres.addGenre(degree)
     for genreLink in detailsPageElements.xpath('//a[@class="video-tag"]'):
         genreName = genreLink.text_content().strip()
 
@@ -99,29 +112,33 @@ def update(metadata, siteID, movieGenres, movieActors):
         '//img[@class="video-image"]/@src'
     ]
 
-    for xpath in xpaths:
-        for img in detailsPageElements.xpath(xpath):
-            img = img.split('?')[0]
+    try:
+        posterUrl = detailsPageElements.xpath('//img[@class="video-image"]/@src')[0].split('?')[0]
+        Log('Background: ' + posterUrl)
+        metadata.art[posterUrl] = Proxy.Media(
+            HTTP.Request(posterUrl, headers={'Referer': 'http://www.google.com'}).content, sort_order=1)
+    except:
+        pass
 
-            art.append(img)
-
-    Log('Artwork found: %d' % len(art))
-    for idx, posterUrl in enumerate(art, 1):
-        if not PAsearchSites.posterAlreadyExists(posterUrl, metadata):
-            # Download image file for analysis
-            try:
-                image = PAutils.HTTPRequest(posterUrl, headers={'Referer': 'http://www.google.com'})
-                im = StringIO(image.content)
-                resized_image = Image.open(im)
-                width, height = resized_image.size
-                # Add the image proxy items to the collection
-                if width > 1:
-                    # Item is a poster
-                    metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-                if idx > 1 and width > 100:
-                    # Item is an art item
-                    metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx)
-            except:
-                pass
+    refUrl = detailsPageElements.xpath('//div[contains(@class,"gallery-item")]/@data-big-image')[1].split('?')[0]
+    refUrl = re.sub('[0-9].jpg', '', refUrl)
+    Log('posterUrl: ' + posterUrl)
+    try:
+        for idx in range(1, 100):
+            posterUrl = refUrl + str(idx) + '.jpg'
+            Log('posterUrl: ' + posterUrl)
+            image = PAutils.HTTPRequest(posterUrl, headers={'Referer': 'http://www.google.com'})
+            im = StringIO(image.content)
+            resized_image = Image.open(im)
+            width, height = resized_image.size
+            # Add the image proxy items to the collection
+            if height > width:
+                # Item is a poster
+                metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx+1)
+            else:
+                # Item is an art item
+                metadata.art[posterUrl] = Proxy.Media(image.content, sort_order=idx+1)
+    except:
+        pass
 
     return metadata

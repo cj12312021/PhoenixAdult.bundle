@@ -1,10 +1,18 @@
 import PAsearchSites
+import urllib2 as urllib
 import PAgenres
 import PAutils
 
 
 def getDatafromAPI(url):
-    req = PAutils.HTTPRequest(url)
+    #req = PAutils.HTTPRequest(url)
+
+    hdr = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Cookie': 'cf_chl_1=84bdddca0f71ebe; cf_chl_prog=x19; cf_clearance=48ca1f31fd7f0fc87a7bf8a70225ebc3768d9d6b-1604679878-0-1z143c1c85zf9513bbza40d28a2-150; __cfduid=d6cc64dee14297a8dabcadacc94831f081604679878; PHPSESSID=qarqef1aa0th2s6j066nlcjmt2svfgll; nats=NjI3LjYxLjMuMy4wLjAuMC4wLjA; nats_cookie=No%2BReferring%2BURL; nats_unique=NjI3LjYxLjMuMy4wLjAuMC4wLjA; nats_sess=3621881f8e077a58cdf29cbeff14d60f; nats_landing=No%2BLanding%2BPage%2BURL; vuid=ae55f4c6-9aa2-46fd-8457-34a4302c5717; sid=s%3AhC_nONiIbsLQL77L-XxZsug5dNIsyq_o.cInXxwuVXf%2FT16J3rYXJC46oSK3lyLQPLE%2Fn4C1sinQ'}
+    req = urllib.Request(url, headers=hdr)
+    req.encoding = 'UTF-8'
 
     if req:
         return req.json()['data']

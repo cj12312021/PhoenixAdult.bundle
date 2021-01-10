@@ -17,28 +17,29 @@ def search(results, encodedTitle, searchTitle, siteNum, lang, searchDate):
 
     req = PAutils.HTTPRequest(PAsearchSites.getSearchSearchURL(siteNum) + encodedTitle)
     searchResults = HTML.ElementFromString(req.text)
-    for searchResult in searchResults.xpath('//a[contains(@class, "thumbnail")]'):
-        titleNoFormatting = searchResult.xpath('.//h3[@class="scene-title"]')[0].text_content().strip()
-        curID = PAutils.Encode(searchResult.get('href').split('?')[0])
-        releaseDate = parse(searchDate).strftime('%Y-%m-%d') if searchDate else ''
-        fullSubSite = searchResult.xpath('.//div/p[@class="help-block"]')[0].text_content().strip()
-
+    for searchResult in searchResults.xpath('//a[@class="thumbnail clearfix"]'):
+        titleNoFormatting = searchResult.xpath('.//div/h3[@class="scene-title"]')[0].text_content()
+        curID = searchResult.get('href').replace("_","$").replace("/","_").split("?")[0]
+        if searchDate:
+            releaseDate = parse(searchDate).strftime('%Y-%m-%d')
+        else:
+            releaseDate = ''
+        fullSubSite = searchResult.xpath('.//div/p[@class="help-block"]')[0].text_content()
+        Log("Full subSite: "+ fullSubSite)
         if 'BehindTheScenes' in fullSubSite and 'BTS' not in titleNoFormatting:
             titleNoFormatting = titleNoFormatting + ' BTS'
         subSite = fullSubSite.split('.com')[0]
-
+        Log("Subsite: " + subSite)
         if subSite == PAsearchSites.getSearchSiteName(siteNum):
             score = 100 - Util.LevenshteinDistance(searchTitle.lower(), titleNoFormatting.lower())
         else:
             score = 60 - Util.LevenshteinDistance(searchTitle.lower(), titleNoFormatting.lower())
-
-        results.Append(MetadataSearchResult(id='%s|%d|%s' % (curID, siteNum, releaseDate), name='%s [Dogfart/%s]' % (titleNoFormatting, subSite), score=score, lang=lang))
-
+        results.Append(MetadataSearchResult(id = curID + "|" + str(siteNum) + "|" + releaseDate, name = titleNoFormatting + " [Dogfart/" + subSite + "] ", score = score, lang = lang))
     return results
-
 
 def update(metadata, siteID, movieGenres, movieActors):
     Log('******UPDATE CALLED*******')
+    Log('metadata.id: '+ str(metadata.id))
     temp = str(metadata.id).split("|")[0].replace('_', '/').replace("$", "_")
     Log(temp)
     url = PAsearchSites.getSearchBaseURL(siteID) + temp
@@ -185,7 +186,7 @@ def update(metadata, siteID, movieGenres, movieActors):
                 resized_image = Image.open(im)
                 width, height = resized_image.size
                 # Add the image proxy items to the collection
-                if width > height:
+                if width < height:
                     # Item is a poster
                     metadata.posters[posterUrl] = Proxy.Media(image.content, sort_order=idx)
                 else:

@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0,'D:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
+sys.path.insert(0,'A:\Plex\Plex Media Server\Plug-ins\MetaDataHelper')
 import MyHelper
 import PAutils
 
@@ -25,6 +25,7 @@ class PhoenixActors:
     def processActors(self, metadata):
         actorsProcessed = 0
         actorSet = set([])
+        actor2photo = {}
         while actorsProcessed < self.actorsNum:
             skip = False
             # Save the potentional new Actor or Actress to a new variable, replace &nbsp; with a true space, and strip off any surrounding whitespace
@@ -75,8 +76,6 @@ class PhoenixActors:
                     newActor = 'Angel Piaff'
                 elif newActor == 'Ani Black Fox' or newActor == 'Ani Black':
                     newActor = 'Ani Blackfox'
-                elif newActor == 'Anikka Albrite':
-                    newActor = 'Annika Albrite'
                 elif newActor == 'Anita Bellini':
                     newActor = 'Anita Bellini Berlusconi'
                 elif newActor == 'Anjelica' or newActor == 'Ebbi' or newActor == 'Abby H' or newActor == 'Katherine A':
@@ -2470,21 +2469,29 @@ class PhoenixActors:
                     newPhoto = actorDBfinder(newActor)
                 Log('Actor: %s %s' % (newActor, newPhoto))
 
+                Log('*******Finding alt name for******: ' + newActor)
+                newActor = MyHelper.getActor(newActor)
+                Log('*******Replaced name with******: ' + newActor)
+                Log('*******Finding photo replacement for******: '+newPhoto)
+                newPhoto = MyHelper.getPhoto(newActor, metadata.year, newPhoto)
+                Log('*******Replaced photo with******: ' + newPhoto)
+                actor2photo[newActor] = newPhoto
+            actorsProcessed = actorsProcessed + 1
+
+        Log('*******Clearing Actors******')
+        if len(actor2photo) > 0:
+            metadata.roles.clear()
+            for name, photo in actor2photo.items():
+                Log('Looking at : ' + name)
                 role = metadata.roles.new()
-                s = newActor.split(" - ")
-                role.name = MyHelper.getActor(s[0])
+                s = name.split(" - ")
+                role.name = s[0]
                 try:
                     role.role = s[1]
                 except:
                     pass
-                Log('******Photo Search******* role: ' + role.name + ' Year: ' + str(
-                    metadata.year) + ' replace: ' + newPhoto)
-                role.photo = MyHelper.getPhoto(role.name, metadata.year, newPhoto)
-                Log('******Actor*******: ' + role.name)
-                Log('******Actor Photo*******: ' + role.photo)
                 actorSet.add(role.name)
-            actorsProcessed = actorsProcessed + 1
-
+                role.photo = photo
         if len(actorSet) != 0:
             Log('*******Searching Genre******' + str(metadata.year) + ' ' + str(actorSet))
             genreSet = MyHelper.findGenre(None, metadata.year, list(actorSet), False)

@@ -33,13 +33,17 @@ class PhoenixAdultAgent(Agent.Movies):
     primary_provider = True
 
     def search(self, results, media, lang):
+        Log('*******media.name******' + str(media.name))
         if Prefs['strip_enable']:
             title = media.name.split(Prefs['strip_symbol'], 1)[0]
+            Log('*******title 1******' + str(title))
         else:
             title = media.name
+            Log('*******title 2******' + str(title))
 
         if media.primary_metadata is not None:
             title = media.primary_metadata.studio + " " + media.primary_metadata.title
+            Log('*******title 3******' + str(title))
 
         trashTitle = (
             'RARBG', 'COM', r'\d{3,4}x\d{3,4}', 'HEVC', 'H265', 'AVC', r'\dK',
@@ -47,12 +51,15 @@ class PhoenixAdultAgent(Agent.Movies):
             'ForeverAloneDude'
         )
 
-        title = re.sub(r'\W', ' ', title)
+        if 'Virtualtaboo' not in title and 'virtualtaboo' not in title:
+            title = re.sub(r'\W', ' ', title)
+            Log('*******title 4******' + str(title))
+
         for trash in trashTitle:
             title = re.sub(r'\b%s\b' % trash, '', title, flags=re.IGNORECASE)
         title = ' '.join(title.split())
 
-        Log('*******MEDIA TITLE****** ' + str(title))
+        Log('*******MEDIA TITLE******' + str(title))
 
         # Search for year
         year = media.year
